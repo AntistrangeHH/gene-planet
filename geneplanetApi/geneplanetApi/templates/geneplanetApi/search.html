@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>
+            Search Genome
+        </title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <form id="search-form" action="#">
+            <label for="genome"></label>
+            <input id="search-input" type="text" name="genome">
+        </form>
+        
+        <script src="" async defer></script>
+    </body>
+</html>
+
+<script>
+    // setup before functions
+    let typingTimer;                //timer identifier
+    let doneTypingInterval = 500;  //time in ms, 5 second for example
+    let inputField = $("#search-input")
+
+    // function to be called when user stops typing for 500ms
+    function search(){
+        let searchString = inputField.val();
+
+        let data = {
+            isRS: false,
+            onlyChrom: false,
+            rsID: "",
+            chrom: "",
+            pos: ""
+        }
+
+        //checks if value of input starts with "rs"
+        if(searchString.length > 1 && searchString.substr(0,2) == 'rs') {
+            resetData()
+            data.isRs = true;
+            data.rsID = searchString
+        } else {
+            let isInt = Number(searchString);
+            let hasSpace = searchString.length > 0 && searchString.indexOf(" ") >= 0;
+
+            if(isInt) {
+                resetData()
+                data.onlyChrom = true;
+                data.chrom = searchString.trim();
+            }
+        }
+
+        function resetData() {
+            data = {
+                isRS: false,
+                onlyChrom: false,
+                rsID: "",
+                chrom: "",
+                pos: "" 
+            }
+        }
+
+
+        $.ajax({
+            type: "get",
+            url: "http://127.0.0.1:8000/search/",
+            data: data,
+            success: function(e){
+                console.log(e);
+            },
+            error: function(e){
+                console.log(e);
+            }
+        })
+    }
+
+    // on keyup, start the countdown
+    inputField.on('keyup', function () {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(doneTyping, doneTypingInterval);
+    });
+
+    // on keydown, clear the countdown 
+    inputField.on('keydown', function () {
+    clearTimeout(typingTimer);
+    });
+
+    // user is "finished typing," do something
+    function doneTyping () {
+        search()
+    }
+
+</script>

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'geneplanetApi',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
