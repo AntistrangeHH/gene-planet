@@ -1,8 +1,11 @@
+import re
 from urllib import parse
+from django.db.models.query import QuerySet
 from django.http import request
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import render
 
+from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,8 +13,6 @@ from rest_framework import status
 
 from .serializers import GenotypeSerializer
 from .models import Genotype
-
-
 
 
 def search_view(request):
@@ -25,16 +26,25 @@ class SearchGenome(APIView):
         onlyChrom = request.GET.get("onlyChrom")
         genotypes = None
         
-        if(isRs):
+        # queries only by rs id
+        if(isRs == "true"):
             query_string = request.GET.get("rsID")
-            genotypes = Genotype.objects.filter(chrom_id__contains=query_string)
-        elif(onlyChrom):
+            genotypes = Genotype.objects.filter(chrom_id__contains=query_string)[:50]
+
+        # queries only by chrom (when user only types an integer in the input field)
+        elif(onlyChrom == "true"):
             query_string = request.GET.get("chrom")
-            genotypes = Genotype.objects.filter(chrom__contains=query_string)
-        # breakpoint()
-        # query_string = request.GET.get("searchString")
-        response = genotypes.values_list()
-        return HttpResponse(response)
+            genotypes = Genotype.objects.filter(chrom__contains=query_string)[:50]
+
+        else:
+            chrom = request.GET.get("chrom")
+            pos = request.GET.get("pos")
+            cond1 = Q(chrom__contains=chrom)
+            cond2 = Q(pos__contains=pos)
+            genotypes = Genotype.objects.filter(cond1 & cond2)[:50]
+            
+        response = list(genotypes.values_list())
+        return JsonResponse(response, safe=False)
     def post(self, request):
         serializer = GenotypeSerializer(data=request.data)
         if serializer.is_valid():

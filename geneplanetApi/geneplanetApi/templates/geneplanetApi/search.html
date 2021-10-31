@@ -10,12 +10,39 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="">
         <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <style>
+            table {
+                width: 100% !important;
+                margin-top: 20px;
+            }
+            table > thead {
+                font-size: 24px;
+                font-weight: bold;
+            }
+            body{
+                padding: 0 20% 0 20%;
+            }
+        </style>
     </head>
     <body>
         <form id="search-form" action="#">
             <label for="genome"></label>
             <input id="search-input" type="text" name="genome">
         </form>
+
+        <table id="result-table" border="1px" cellpadding="3" cellspacing="3" style="display: none;">
+            <thead>
+                <th>
+                    <td>Chrom</td>
+                    <td>Pos</td>
+                    <td>RSID</td>
+                    <td>Ref</td>
+                    <td>Alt</td>
+                    <td>Format</td>
+                </th>
+            </thead>
+            <tbody class="table-body"></tbody>
+        </table>
         
         <script src="" async defer></script>
     </body>
@@ -32,7 +59,7 @@
         let searchString = inputField.val();
 
         let data = {
-            isRS: false,
+            isRs: false,
             onlyChrom: false,
             rsID: "",
             chrom: "",
@@ -41,7 +68,7 @@
 
         //checks if value of input starts with "rs"
         if(searchString.length > 1 && searchString.substr(0,2) == 'rs') {
-            resetData()
+            resetData();
             data.isRs = true;
             data.rsID = searchString
         } else {
@@ -52,12 +79,17 @@
                 resetData()
                 data.onlyChrom = true;
                 data.chrom = searchString.trim();
+            } else if(!isInt && hasSpace) {
+                let chromPos = searchString.split(" ");
+                resetData();
+                data.chrom = chromPos[0];
+                data.pos = chromPos[1];
             }
         }
 
         function resetData() {
             data = {
-                isRS: false,
+                isRs: false,
                 onlyChrom: false,
                 rsID: "",
                 chrom: "",
@@ -66,12 +98,28 @@
         }
 
 
+        // console.log(data);
         $.ajax({
             type: "get",
             url: "http://127.0.0.1:8000/search/",
             data: data,
-            success: function(e){
-                console.log(e);
+            success: function(response){
+                $('#result-table').show();
+
+                let html = '';
+
+                for(let i = 0; i < response.length; i++) {
+                    html += '<tr><td>' + 
+                        (i + 1) + '</td><td> ' +
+                        response[i][0] + '</td><td> ' +
+                        response[i][1] + '</td><td>' +
+                        response[i][2] + '</td><td>' +
+                        response[i][3] + '</td><td>' +
+                        response[i][4] + '</td><td>' + 
+                        response[i][5] + '</td></tr>';
+                }
+
+                $('.table-body').html(html);
             },
             error: function(e){
                 console.log(e);
