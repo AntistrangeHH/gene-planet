@@ -15,10 +15,12 @@ from .serializers import GenotypeSerializer
 from .models import Genotype
 
 
+# View for rendering search page
 def search_view(request):
     return render(request, 'geneplanetApi/search.html')
 
 
+# API view for get method for search
 class SearchGenome(APIView):
     def get(self, request):
 
@@ -29,18 +31,19 @@ class SearchGenome(APIView):
         # queries only by rs id
         if(isRs == "true"):
             query_string = request.GET.get("rsID")
-            genotypes = Genotype.objects.filter(chrom_id__contains=query_string)[:50]
+            genotypes = Genotype.objects.filter(chrom_id__startswith=query_string)[:50]
 
         # queries only by chrom (when user only types an integer in the input field)
         elif(onlyChrom == "true"):
             query_string = request.GET.get("chrom")
-            genotypes = Genotype.objects.filter(chrom__contains=query_string)[:50]
+            genotypes = Genotype.objects.filter(chrom=query_string)[:50]
 
+        # queries by chrom and pos simultaneously
         else:
             chrom = request.GET.get("chrom")
             pos = request.GET.get("pos")
-            cond1 = Q(chrom__contains=chrom)
-            cond2 = Q(pos__contains=pos)
+            cond1 = Q(chrom=chrom)
+            cond2 = Q(pos__startswith=pos)
             genotypes = Genotype.objects.filter(cond1 & cond2)[:50]
             
         response = list(genotypes.values_list())
@@ -53,16 +56,14 @@ class SearchGenome(APIView):
         return Response(serializer.data, status=status.HTTP_404_NOT_FOUND)
 
 
+# This will be for the second part of the task
 class UpdateGenome(APIView):
     def get_objects(self, id):
         try:
             return Genotype.objects.get(id=id)
         except:
             return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-    def get(self, request, id):
-        genotype = self.get_objects(id)
-        serializer = GenotypeSerializer(genotype)
-        return Response(serializer.data)
+
     def put(self, request, id):
         genotype = self.get_objects(id)
         serializer = GenotypeSerializer(genotype, data=request.data)

@@ -32,14 +32,15 @@
 
         <table id="result-table" border="1px" cellpadding="3" cellspacing="3" style="display: none;">
             <thead>
-                <th>
+                <tr>
+                    <td>No.</td>
                     <td>Chrom</td>
                     <td>Pos</td>
                     <td>RSID</td>
                     <td>Ref</td>
                     <td>Alt</td>
                     <td>Format</td>
-                </th>
+                </tr>
             </thead>
             <tbody class="table-body"></tbody>
         </table>
@@ -86,7 +87,7 @@
                 data.pos = chromPos[1];
             }
         }
-
+        // reseting data to initial values
         function resetData() {
             data = {
                 isRs: false,
@@ -97,14 +98,14 @@
             }
         }
 
-
-        // console.log(data);
+        // ajax call to api that is created
         $.ajax({
             type: "get",
             url: "http://127.0.0.1:8000/search/",
             data: data,
             success: function(response){
                 $('#result-table').show();
+                let queryEnd = date.getTime();
 
                 let html = '';
 
@@ -140,6 +141,7 @@
 
     // user is "finished typing," do something
     function doneTyping () {
+        queryStart = date.getTime();
         search()
     }
 
